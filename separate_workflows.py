@@ -24,9 +24,9 @@ def extract_full_name(element, namespace):
     return full_name_element.text if full_name_element is not None else None
 
 
-def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name, i):
+def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name):
     """Create a new XML file for a given element."""
-    output_filename = f'{workflow_directory}/{parent_workflow_name}.{tag}_{full_name}_{i}.xml'
+    output_filename = f'{workflow_directory}/{parent_workflow_name}.{tag}_{full_name}.xml'
 
     # Remove the namespace prefix from the element tags
     for element in label.iter():
@@ -56,11 +56,11 @@ def process_workflow_file(workflow_directory, filename):
 
     # Iterate through the specified XML tags
     for tag in XML_TAGS:
-        for i, label in enumerate(root.findall(f'sforce:{tag}', ns)):
+        for _, label in enumerate(root.findall(f'sforce:{tag}', ns)):
             full_name = extract_full_name(label, ns)
 
             if full_name:
-                create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name, i)
+                create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name)
             else:
                 logging.info(f"Skipping {tag} element without fullName")
 
