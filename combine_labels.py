@@ -56,8 +56,7 @@ def create_combined_label_file(output_dir, combined_file):
             xml_file.write('\n'.encode('utf-8'))  # Add a newline between <labels> blocks
         xml_file.write(xml_footer.encode('utf-8'))
 
-    logging.info("Combined XML file created with all labels using individual XML files in '%s'.",
-                 combined_file)
+    logging.info('The custom labels have been compiled for deployments.')
 
 
 def main(output_directory, output_file):
