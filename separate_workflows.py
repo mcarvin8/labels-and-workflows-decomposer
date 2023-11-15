@@ -39,7 +39,7 @@ def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_n
     # Create a new XML file for each element
     with open(output_filename, 'wb') as file:
         # Add the XML header to the file
-        file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n')
+        file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n    ')
         element_tree.write(file, encoding='utf-8')
 
     logging.info(f"Saved {tag} element content to {output_filename}")

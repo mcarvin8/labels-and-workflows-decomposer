@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 XML_TAGS = ['alerts', 'fieldUpdates', 'flowActions', 'fullName', 'knowledgePublishes', 'outboundMessages', 'rules', 'tasks']
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
@@ -61,7 +62,13 @@ def format_and_write_xmls(merged_xmls, workflow_directory):
     xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n'
     for parent_workflow_name, parent_workflow_root in merged_xmls.items():
         parent_xml_str = ET.tostring(parent_workflow_root, encoding='utf-8').decode('utf-8')
-        formatted_xml = parent_xml_str.replace('><', '>\n    <').replace('<fullName>', '\t<fullName>')
+        formatted_xml = minidom.parseString(parent_xml_str).toprettyxml(indent="    ")
+
+        # Remove extra new lines
+        formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if line.strip())
+
+        # Remove existing XML declaration
+        formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if not line.strip().startswith('<?xml'))
 
         parent_workflow_filename = os.path.join(workflow_directory, f'{parent_workflow_name}.workflow-meta.xml')
         with open(parent_workflow_filename, 'wb') as file:

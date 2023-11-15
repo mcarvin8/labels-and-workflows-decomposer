@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<labels>
+    <fullName>quoteManual</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>Manual Quote</shortDescription>
+    <value>This is a manual quote.</value>
+</labels>
