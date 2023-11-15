@@ -44,12 +44,17 @@ def create_combined_label_file(output_dir, combined_file):
             labels_strings.append(ET.tostring(label_element, encoding='UTF-8').decode('utf-8'))
 
     # Save the combined XML to a file with proper formatting
-    with open(combined_file, 'w', encoding='utf-8') as xml_file:
-        xml_file.write(xml_header)
+    with open(combined_file, 'wb') as xml_file:
+        # Include encoding information in the XML header
+        xml_file.write(xml_header.encode('utf-8'))
         for labels_string in labels_strings:
-            xml_file.write(labels_string)
-            xml_file.write('\n')  # Add a newline between <labels> blocks
-        xml_file.write(xml_footer)
+            # Remove existing XML declaration
+            formatted_labels_string = '\n    '.join(line for line in labels_string.split('\n') if not line.strip().startswith('<?xml'))
+            # Adjust indentation by adding one more tab
+            formatted_labels_string = formatted_labels_string.replace('<labels>', '    <labels>')
+            xml_file.write(formatted_labels_string.encode('utf-8'))
+            xml_file.write('\n'.encode('utf-8'))  # Add a newline between <labels> blocks
+        xml_file.write(xml_footer.encode('utf-8'))
 
     logging.info("Combined XML file created with all labels using individual XML files in '%s'.",
                  combined_file)
