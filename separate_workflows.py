@@ -5,12 +5,11 @@ import os
 
 ns = {'sforce': 'http://soap.sforce.com/2006/04/metadata'}
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-XML_TAGS = ['alerts', 'fieldUpdates', 'flowActions', 'fullName', 'knowledgePublishes', 'outboundMessages', 'rules', 'tasks']
 
 
 def parse_args():
     """
-        Function to parse command line arguments.
+    Function to parse command line arguments.
     """
     parser = argparse.ArgumentParser(description='A script to create workflows.')
     parser.add_argument('-o', '--output', default='force-app/main/default/workflows')
@@ -26,7 +25,10 @@ def extract_full_name(element, namespace):
 
 def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name):
     """Create a new XML file for a given element."""
-    output_filename = f'{workflow_directory}/{parent_workflow_name}.{tag}_{full_name}.xml'
+    # Remove the namespace prefix from the tag
+    tag_without_namespace = tag.split('}')[-1] if '}' in tag else tag
+
+    output_filename = f'{workflow_directory}/{parent_workflow_name}.{tag_without_namespace}_{full_name}.xml'
 
     # Remove the namespace prefix from the element tags
     for element in label.iter():
@@ -42,7 +44,7 @@ def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_n
         file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n    ')
         element_tree.write(file, encoding='utf-8')
 
-    logging.info(f"Saved {tag} element content to {output_filename}")
+    logging.info('Saved %s element content to %s', tag, output_filename)
 
 
 def process_workflow_file(workflow_directory, filename):
@@ -51,18 +53,25 @@ def process_workflow_file(workflow_directory, filename):
     parent_workflow_name = filename.split('.')[0]
     workflow_file_path = os.path.join(workflow_directory, filename)
 
-    tree = ET.parse(workflow_file_path)
-    root = tree.getroot()
+    try:
+        tree = ET.parse(workflow_file_path)
+        root = tree.getroot()
+    except ET.ParseError:
+        logging.error('Error parsing XML file')
+        return
 
-    # Iterate through the specified XML tags
-    for tag in XML_TAGS:
-        for _, label in enumerate(root.findall(f'sforce:{tag}', ns)):
+    # Extract all unique XML tags dynamically
+    xml_tags = {elem.tag for elem in root.iter() if '}' in elem.tag}
+
+    # Iterate through the dynamically extracted XML tags
+    for tag in xml_tags:
+        for _, label in enumerate(root.findall(tag, ns)):
             full_name = extract_full_name(label, ns)
 
             if full_name:
                 create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_name)
             else:
-                logging.info(f"Skipping {tag} element without fullName")
+                logging.info('Skipping %s element without fullName', tag)
 
 
 def separate_workflows(workflow_directory):

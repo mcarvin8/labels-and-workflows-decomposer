@@ -10,7 +10,7 @@
             <type>FieldUpdate</type>
         </actions>
         <actions>
-            <fullName>Field_Update</fullName>
+            <name>Field_Update</name>
             <type>FieldUpdate</type>
         </actions>
         <actions>

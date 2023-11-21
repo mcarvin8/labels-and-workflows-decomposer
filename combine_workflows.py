@@ -4,7 +4,6 @@ import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-XML_TAGS = ['alerts', 'fieldUpdates', 'flowActions', 'fullName', 'knowledgePublishes', 'outboundMessages', 'rules', 'tasks']
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 
@@ -43,12 +42,10 @@ def merge_xml_content(individual_xmls):
     for parent_workflow_name, individual_roots in individual_xmls.items():
         parent_workflow_root = ET.Element('Workflow', xmlns="http://soap.sforce.com/2006/04/metadata")
 
-        for tag in XML_TAGS:
-            matching_roots = [root for root in individual_roots if root.tag == tag]
-            for matching_root in matching_roots:
-                child_element = ET.Element(tag)
-                parent_workflow_root.append(child_element)
-                child_element.extend(matching_root)
+        for root in individual_roots:
+            child_element = ET.Element(root.tag)
+            parent_workflow_root.append(child_element)
+            child_element.extend(root)
 
         merged_xmls[parent_workflow_name] = parent_workflow_root
 
