@@ -39,7 +39,6 @@ def separate_labels(xml_file_path):
                 if '}' in tag_object.tag:
                     tag = tag_object.tag.split('}')[-1]
                     label_dict[tag] = tag_object.text
-                    logging.info(tag_object.text)
 
             formatted_xml = ET.Element('labels')
             for key, value in label_dict.items():
