@@ -1,11 +1,7 @@
-"""
-    Build invidual label files from the retrieval file for version control.
-"""
 import argparse
 import logging
 import os
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 
 
 ns = {'sforce': 'http://soap.sforce.com/2006/04/metadata'}
@@ -13,58 +9,77 @@ logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 
 def parse_args():
-    """
-    Function to parse command line arguments.
-    """
+    """ Function to parse command line arguments."""
     parser = argparse.ArgumentParser(description='A script to create custom labels files.')
-    parser.add_argument('-x', '--xmls',
+    parser.add_argument('-f', '--file',
                         default='force-app/main/default/labels/CustomLabels.labels-meta.xml')
     args = parser.parse_args()
     return args
 
 
+def create_xml_file(label, parent_directory, tag, full_name):
+    """Create a new XML file for a given element."""
+    output_filename = os.path.join(parent_directory, f'{full_name}.xml')
+
+    # Remove the namespace prefix from the element tags
+    for element in label.iter():
+        if '}' in element.tag:
+            element.tag = element.tag.split('}')[1]
+
+
+    # Create a new XML ElementTree with the label as the root
+    element_tree = ET.ElementTree(label)
+
+    with open(output_filename, 'wb') as file:
+        # Add the XML header to the file
+        file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n    ')
+        
+        # Write the entire element tree to the file
+        element_tree.write(file, encoding='utf-8')
+
+    logging.info('Saved %s element content to %s', tag, output_filename)
+
+
+def extract_full_name(label):
+    """Extract the 'fullName' attribute from a label."""
+    full_name_element = label.find('sforce:fullName', ns)
+    if full_name_element is not None:
+        return full_name_element.text
+    return None
+
+
 def separate_labels(xml_file_path):
-    """
-        Separate labels into their own files
-    """
+    """Separate labels into their own files."""
     parent_directory = os.path.dirname(xml_file_path)
+
     try:
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
-
-        # Iterate through the 'labels' elements and create dictionaries
-        for label in root.findall('sforce:labels', ns):
-            label_dict = {}
-            for tag_object in label.iter():
-                if '}' in tag_object.tag:
-                    tag = tag_object.tag.split('}')[-1]
-                    label_dict[tag] = tag_object.text
-
-            formatted_xml = ET.Element('labels')
-            for key, value in label_dict.items():
-                if not value.isspace():
-                    ET.SubElement(formatted_xml, key).text = value
-
-            xml_string = minidom.parseString(ET.tostring(formatted_xml)).toprettyxml(indent="    ")
-            label_name = label_dict.get('fullName', 'UnknownLabel')  # Default if 'fullName' is not present
-            label_file_path = f'{parent_directory}/{label_name}.xml'
-
-            with open(label_file_path, 'w', encoding='utf-8') as xml_file:
-                xml_file.write(xml_string)
-
     except FileNotFoundError:
         logging.info("Error: XML file '%s' not found.", xml_file_path)
+        return
     except ET.ParseError:
         logging.info("Error: Unable to parse the XML file.")
+        return
+
+    # Extract all unique XML tags dynamically
+    xml_tags = {elem.tag for elem in root.iter() if '}' in elem.tag}
+
+    # Iterate through the dynamically extracted XML tags
+    for tag in xml_tags:
+        for label in root.findall(tag):
+            full_name = extract_full_name(label)
+            if full_name:
+                create_xml_file(label, parent_directory, tag, full_name)
+            else:
+                logging.info('Skipping %s element without fullName', tag)
 
 
-def main(combined_file):
-    """
-        Main function.
-    """
-    separate_labels(combined_file)
+def main(label_file):
+    """Main function."""
+    separate_labels(label_file)
 
 
 if __name__ == '__main__':
     inputs = parse_args()
-    main(inputs.xmls)
+    main(inputs.file)

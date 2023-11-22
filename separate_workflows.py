@@ -8,11 +8,9 @@ logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 
 def parse_args():
-    """
-    Function to parse command line arguments.
-    """
+    """Function to parse command line arguments."""
     parser = argparse.ArgumentParser(description='A script to create workflows.')
-    parser.add_argument('-o', '--output', default='force-app/main/default/workflows')
+    parser.add_argument('-d', '--directory', default='force-app/main/default/workflows')
     args = parser.parse_args()
     return args
 
@@ -56,9 +54,13 @@ def process_workflow_file(workflow_directory, filename):
     try:
         tree = ET.parse(workflow_file_path)
         root = tree.getroot()
-    except ET.ParseError:
-        logging.error('Error parsing XML file')
+    except FileNotFoundError:
+        logging.info("Error: XML file '%s' not found.", workflow_file_path)
         return
+    except ET.ParseError:
+        logging.info("Error: Unable to parse the XML file.")
+        return
+
 
     # Extract all unique XML tags dynamically
     xml_tags = {elem.tag for elem in root.iter() if '}' in elem.tag}
@@ -82,13 +84,11 @@ def separate_workflows(workflow_directory):
             process_workflow_file(workflow_directory, filename)
 
 
-def main(output_directory):
-    """
-    Main function
-    """
-    separate_workflows(output_directory)
+def main(workflow_directory):
+    """Main function."""
+    separate_workflows(workflow_directory)
 
 
 if __name__ == '__main__':
     inputs = parse_args()
-    main(inputs.output)
+    main(inputs.directory)
