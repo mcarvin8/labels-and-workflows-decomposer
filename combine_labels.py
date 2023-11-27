@@ -17,7 +17,7 @@ def parse_args():
     return args
 
 
-def create_combined_label_file(output_dir, combined_file):
+def combine_labels(output_dir, combined_file):
     """Create the combined label file for deployments."""
     # Define the XML header and footer
     xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">\n'
@@ -52,7 +52,7 @@ def create_combined_label_file(output_dir, combined_file):
 
 def main(output_directory, output_file):
     """ Main function."""
-    create_combined_label_file(output_directory, output_file)
+    combine_labels(output_directory, output_file)
 
 
 if __name__ == '__main__':

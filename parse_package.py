@@ -3,7 +3,7 @@ import logging
 import sys
 import xml.etree.ElementTree as ET
 
-from combine_labels import create_combined_label_file
+from combine_labels import combine_labels
 from combine_workflows import combine_workflows
 
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
@@ -11,9 +11,7 @@ ns = {'sforce': 'http://soap.sforce.com/2006/04/metadata'}
 
 
 def parse_args():
-    """
-        Function to parse command line arguments.
-    """
+    """Function to parse command line arguments."""
     parser = argparse.ArgumentParser(description='A script to scan the package.')
     parser.add_argument('-m', '--manifest', default='manifest/package.xml')
     args = parser.parse_args()
@@ -21,9 +19,7 @@ def parse_args():
 
 
 def scan_package_metadata(package_path):
-    """
-        Function to check package for custom labels and workflows.
-    """
+    """Function to check package for custom labels and workflows."""
     try:
         root = ET.parse(package_path).getroot()
     except ET.ParseError:
@@ -38,7 +34,7 @@ def scan_package_metadata(package_path):
     for metadata_type in root.findall('sforce:types', ns):
         metadata_name = (metadata_type.find('sforce:name', ns)).text
         if metadata_name in label_types and labels_created is False:
-            create_combined_label_file('force-app/main/default/labels',
+            combine_labels('force-app/main/default/labels',
                                        'force-app/main/default/labels/CustomLabels.labels-meta.xml')
             labels_created = True
         if metadata_name in workflow_types and workflows_created is False:
@@ -47,9 +43,7 @@ def scan_package_metadata(package_path):
 
 
 def main(manifest):
-    """
-    Main function to run the script.
-    """
+    """Main function."""
     scan_package_metadata(manifest)
 
 
