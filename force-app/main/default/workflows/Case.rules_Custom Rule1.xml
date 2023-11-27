@@ -11,7 +11,7 @@
         </actions>
         <actions>
             <name>Field_Update</name>
-            <type>FieldUpdate</type>
+                <type>FieldUpdate</type>
         </actions>
         <actions>
             <name>Another_Outbound_message</name>
