@@ -2,14 +2,14 @@ import argparse
 import logging
 import os
 import xml.etree.ElementTree as ET
-
+from xml.dom import minidom
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 
 def parse_args():
-    """ Function to parse command line arguments."""
-    parser = argparse.ArgumentParser(description='A script to create the deploy label file.')
+    """Function to parse command line arguments."""
+    parser = argparse.ArgumentParser(description='A script to combine labels.')
     parser.add_argument('-f', '--file',
                         default='force-app/main/default/labels/CustomLabels.labels-meta.xml')
     parser.add_argument('-d', '--directory', default='force-app/main/default/labels')
@@ -17,42 +17,59 @@ def parse_args():
     return args
 
 
-def combine_labels(output_dir, combined_file):
-    """Create the combined label file for deployments."""
-    # Define the XML header and footer
-    xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">\n'
-    xml_footer = '</CustomLabels>\n'
-    # Create a list to store the XML strings for each <labels> block
-    labels_strings = []
+def read_individual_xmls(label_directory):
+    """Read each XML file."""
+    individual_xmls = []
+    for filename in os.listdir(label_directory):
+        if filename.endswith('.xml') and not filename.endswith('.labels-meta.xml'):
+            tree = ET.parse(os.path.join(label_directory, filename))
+            root = tree.getroot()
+            individual_xmls.append(root)
 
-    # Iterate through the individual XML files in the output directory
-    for filename in os.listdir(output_dir):
-        if filename == "CustomLabels.labels-meta.xml":
-            continue  # Skip this file
-        if filename.endswith(".xml"):
-            file_path = os.path.join(output_dir, filename)
-            tree = ET.parse(file_path)
-            label_element = tree.getroot()
-            labels_strings.append(ET.tostring(label_element, encoding='UTF-8').decode('utf-8'))
+    return individual_xmls
 
-    # Save the combined XML to a file with proper formatting
-    with open(combined_file, 'wb') as xml_file:
-        # Include encoding information in the XML header
-        xml_file.write(xml_header.encode('utf-8'))
-        for labels_string in labels_strings:
-            # Remove existing XML declaration
-            formatted_labels_string = '\n    '.join(line for line in labels_string.split('\n') if not line.strip().startswith('<?xml'))
-            formatted_labels_string = formatted_labels_string.replace('<labels>', '        <labels>')
-            xml_file.write(formatted_labels_string.encode('utf-8'))
-            xml_file.write('\n'.encode('utf-8'))  # Add a newline between <labels> blocks
-        xml_file.write(xml_footer.encode('utf-8'))
+
+def merge_xml_content(individual_roots):
+    """Merge XMLs for all objects."""
+    combined_root = ET.Element('CustomLabels', xmlns="http://soap.sforce.com/2006/04/metadata")
+
+    for root in individual_roots:
+        child_element = ET.Element(root.tag)
+        combined_root.append(child_element)
+        child_element.extend(root)
+
+    return combined_root
+
+
+def format_and_write_xml(combined_root, label_file):
+    """Create the final XML."""
+    xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml_str = ET.tostring(combined_root, encoding='utf-8').decode('utf-8')
+    formatted_xml = minidom.parseString(xml_str).toprettyxml(indent="    ")
+
+    # Remove extra new lines
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if line.strip())
+
+    # Remove existing XML declaration
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if not line.strip().startswith('<?xml'))
+
+    with open(label_file, 'wb') as file:
+        file.write(xml_header.encode('utf-8'))
+        file.write(formatted_xml.encode('utf-8'))
+
+
+def combine_labels(label_directory, label_file):
+    """Combine the labels for deployments."""
+    individual_roots = read_individual_xmls(label_directory)
+    combined_root = merge_xml_content(individual_roots)
+    format_and_write_xml(combined_root, label_file)
 
     logging.info('The custom labels have been compiled for deployments.')
 
 
-def main(output_directory, output_file):
-    """ Main function."""
-    combine_labels(output_directory, output_file)
+def main(directory, label_file):
+    """Main function."""
+    combine_labels(directory, label_file)
 
 
 if __name__ == '__main__':
