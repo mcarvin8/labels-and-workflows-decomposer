@@ -1,7 +1,9 @@
 import argparse
 import logging
-import xml.etree.ElementTree as ET
 import os
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+
 
 ns = {'sforce': 'http://soap.sforce.com/2006/04/metadata'}
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
@@ -33,14 +35,20 @@ def create_xml_file(label, workflow_directory, parent_workflow_name, tag, full_n
         if '}' in element.tag:
             element.tag = element.tag.split('}')[1]
 
-    # Create a new XML ElementTree with the label as the root
-    element_tree = ET.ElementTree(label)
+    xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml_content = ET.tostring(label, encoding='utf-8').decode('utf-8')
+    dom = minidom.parseString(xml_content)
+    formatted_xml = dom.toprettyxml(indent='    ')
 
-    # Create a new XML file for each element
+    # Remove extra new lines
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if line.strip())
+
+    # Remove existing XML declaration
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if not line.strip().startswith('<?xml'))
+
     with open(output_filename, 'wb') as file:
-        # Add the XML header to the file
-        file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n    ')
-        element_tree.write(file, encoding='utf-8')
+        file.write(xml_header.encode('utf-8'))
+        file.write(formatted_xml.encode('utf-8'))
 
     logging.info('Saved %s element content to %s', tag, output_filename)
 

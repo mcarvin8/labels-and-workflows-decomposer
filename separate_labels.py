@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 
 ns = {'sforce': 'http://soap.sforce.com/2006/04/metadata'}
@@ -26,16 +27,20 @@ def create_xml_file(label, parent_directory, tag, full_name):
         if '}' in element.tag:
             element.tag = element.tag.split('}')[1]
 
+    xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml_content = ET.tostring(label, encoding='utf-8').decode('utf-8')
+    dom = minidom.parseString(xml_content)
+    formatted_xml = dom.toprettyxml(indent='    ')
 
-    # Create a new XML ElementTree with the label as the root
-    element_tree = ET.ElementTree(label)
+    # Remove extra new lines
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if line.strip())
+
+    # Remove existing XML declaration
+    formatted_xml = '\n'.join(line for line in formatted_xml.split('\n') if not line.strip().startswith('<?xml'))
 
     with open(output_filename, 'wb') as file:
-        # Add the XML header to the file
-        file.write(b'<?xml version="1.0" encoding="UTF-8"?>\n    ')
-        
-        # Write the entire element tree to the file
-        element_tree.write(file, encoding='utf-8')
+        file.write(xml_header.encode('utf-8'))
+        file.write(formatted_xml.encode('utf-8'))
 
     logging.info('Saved %s element content to %s', tag, output_filename)
 
