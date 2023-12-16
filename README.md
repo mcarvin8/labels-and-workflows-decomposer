@@ -8,14 +8,14 @@ Run the combine scripts to re-combine labels and workflows into files compatible
 
 Use the provided `.gitignore` and `.forceignore` to have Git ignore the original meta files and have the Salesforce CLI ignore the separated XML files.
 
-If you deploy all metadata in deployments, omit the `--manifest` argument in the combine scripts to compile all labels and workflows for the deployment.
+If you deploy all metadata in deployments, run the combine scripts directly without arguments to compile all labels and workflows in the default directories.
 
 ```
     - python3 ./combine_labels.py
     - python3 ./combine_workflows.py
 ```
 
-If you deploy metadata declared in a manifest file, run the `parse_package.py` script to parse the package.xml and run the combine scripts if `CustomLabel` or `Workflow` is in the package. This script will supply the `--manifest` argument and an additional argument containing the labels and workflows listed in the package.xml.
+If you deploy metadata declared in a manifest file, run the `parse_package.py` script to parse the package.xml and run the applicable scripts if custom labels or workflows are in the package.xml.
 
 ```
     - python3 ./parse_package.py --manifest "./manifest/package.xml"
