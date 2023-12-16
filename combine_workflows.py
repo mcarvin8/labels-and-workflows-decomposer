@@ -11,18 +11,19 @@ def parse_args():
     """Function to parse command line arguments."""
     parser = argparse.ArgumentParser(description='A script to create workflows.')
     parser.add_argument('-d', '--directory', default='force-app/main/default/workflows')
+    parser.add_argument('-m', '--manifest', default=False, action='store_true')
+    parser.add_argument('-w', '--workflows', default=None)
     args = parser.parse_args()
     return args
 
 
-def read_individual_xmls(workflow_directory):
+def read_individual_xmls(workflow_directory, manifest, package_workflows):
     """Read each XML file."""
     individual_xmls = {}
     for filename in os.listdir(workflow_directory):
-        if filename.endswith('.xml') and not filename.endswith('.workflow-meta.xml'):
-            parent_workflow_name = filename.split('.')[0]
+        parent_workflow_name = filename.split('.')[0]
+        if filename.endswith('.xml') and not filename.endswith('.workflow-meta.xml') and (not manifest or (manifest and parent_workflow_name in package_workflows)):
             individual_xmls.setdefault(parent_workflow_name, [])
-
             tree = ET.parse(os.path.join(workflow_directory, filename))
             root = tree.getroot()
             individual_xmls[parent_workflow_name].append(root)
@@ -71,20 +72,24 @@ def format_and_write_xmls(merged_xmls, workflow_directory):
             file.write(formatted_xml.encode('utf-8'))
 
 
-def combine_workflows(workflow_directory):
+def combine_workflows(workflow_directory, manifest, package_workflows):
     """Combine the workflows for deployments."""
-    individual_xmls = read_individual_xmls(workflow_directory)
+    individual_xmls = read_individual_xmls(workflow_directory, manifest, package_workflows)
     merged_xmls = merge_xml_content(individual_xmls)
     format_and_write_xmls(merged_xmls, workflow_directory)
 
-    logging.info('The workflows have been compiled for deployments.')
+    if manifest:
+        logging.info("The workflows for %s have been compiled for deployments.",
+                    ', '.join(map(str, package_workflows)))
+    else:
+        logging.info('The workflows have been compiled for deployments.')
 
 
-def main(directory):
+def main(directory, manifest, package_workflows):
     """Main function."""
-    combine_workflows(directory)
+    combine_workflows(directory, manifest, package_workflows)
 
 
 if __name__ == '__main__':
     inputs = parse_args()
-    main(inputs.directory)
+    main(inputs.directory, inputs.manifest, inputs.workflows)

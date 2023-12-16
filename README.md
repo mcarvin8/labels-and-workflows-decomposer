@@ -10,26 +10,20 @@ Use the provided `.gitignore` and `.forceignore` to have Git ignore the original
 
 The package parsing script can be used to run the scripts only when labels or workflow metadata types are declared in the manifest file.
 
-## Custom Label Process 
+If you deploy all metadata in all deployments, omit the `--manifest` argument in the combine scripts to compile all labels and workflows for the deployment.
 
-Seed the repository by retrieving all labels from production using `CustomLabels` and then running the separate script.
+```
+    - python3 ./combine_labels.py
+    - python3 ./combine_workflows.py
+```
 
-To add/update labels:
-1. Retrieve specific labels with `CustomLabel`
-2. Run the separate script to create/update separate XMLs for each label
-3. Update your deployment process to run the combine script to combine all labels during label deployments
+If you deploy metadata declared in a manifest file, run the `parse_package.py` script to parse the package.xml and run the combine scripts if `CustomLabel` or `Workflow` is in the package. This script will supply the `--manifest` argument and an additional argument containing the labels and workflows listed in the package.xml.
 
-## Workflow Process 
+At this time, retrievals with the Salesforce CLI can use the children metadata types like `WorkflowAlert`.
 
-Seed the repository by retrieving all workflows from production using `Workflow` and then running the separate script.
+Deployments using children types like `WorkflowAlert` will have the following failure: `An object XXXXXXXX of type WorkflowAlert was named in package.xml, but was not found in zipped directory`.
 
-To add/update workflows:
-1. Retrieve all workflows for an object with `Workflow` or retrieve specific workflow actions using the children metadata types like `WorkflowAlert`
-2. Run the separate script to create/update separate XMLs for each workflow
-3. Update your deployment process to run the combine script to combine all workflows during workflow deployments
-     1. At this time, retrievals with the Salesforce CLI can use the children metadata types like `WorkflowAlert`
-     2. Deployments using children types like `WorkflowAlert` will have the following failure: `An object XXXXXXXX of type WorkflowAlert was named in package.xml, but was not found in zipped directory`
-     3. Deployments must use the parent `Workflow` type, but this approach will provide greater version control over specific workflow actions you do not want to accidentally overwrite
+The `parse_package.py` script will automatically adjust the package.xml to list the parent workflow if children workflow types are found in the package.
 
 ## Change-Log
 
@@ -38,3 +32,5 @@ December 15, 2023 - Combine Workflows script fixed to sort workflows similar to 
 The issue `Error parsing file: Element fieldUpdates is duplicated at this location in type Workflow` was occuring again in CI pipelines due to the sorting of the workflows in the file.
 
 The workflows created now resemble the CLI output. The above error has been resolved and the script is able to successfully deploy workflows in a CI pipeline.
+
+December 16, 2023 - Add support for manifest/delta deployments to the combine scripts.
