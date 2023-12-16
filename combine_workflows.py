@@ -27,7 +27,10 @@ def read_individual_xmls(workflow_directory):
             root = tree.getroot()
             individual_xmls[parent_workflow_name].append(root)
 
-    return individual_xmls
+    # Sort by workflow type and then alphabetically
+    sorted_individual_xmls = {k: sorted(v, key=lambda x: x.tag) for k, v in sorted(individual_xmls.items())}
+
+    return sorted_individual_xmls
 
 
 def merge_xml_content(individual_xmls):
@@ -35,6 +38,9 @@ def merge_xml_content(individual_xmls):
     merged_xmls = {}
     for parent_workflow_name, individual_roots in individual_xmls.items():
         parent_workflow_root = ET.Element('Workflow', xmlns="http://soap.sforce.com/2006/04/metadata")
+
+        # Sort individual_roots by tag to match Salesforce CLI output
+        individual_roots.sort(key=lambda x: x.tag)
 
         for root in individual_roots:
             child_element = ET.Element(root.tag)
