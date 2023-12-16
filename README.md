@@ -30,3 +30,11 @@ To add/update workflows:
      1. At this time, retrievals with the Salesforce CLI can use the children metadata types like `WorkflowAlert`
      2. Deployments using children types like `WorkflowAlert` will have the following failure: `An object XXXXXXXX of type WorkflowAlert was named in package.xml, but was not found in zipped directory`
      3. Deployments must use the parent `Workflow` type, but this approach will provide greater version control over specific workflow actions you do not want to accidentally overwrite
+
+## Change-Log
+
+December 15, 2023 - Combine Workflows script fixed to sort workflows similar to the Salesforce CLI. 
+
+The issue `Error parsing file: Element fieldUpdates is duplicated at this location in type Workflow` was occuring again in CI pipelines due to the sorting of the workflows in the file.
+
+The workflows created now resemble the CLI output. The above error has been resolved and the script is able to successfully deploy workflows in a CI pipeline.
