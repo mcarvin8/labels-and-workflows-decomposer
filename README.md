@@ -8,9 +8,7 @@ Run the combine scripts to re-combine labels and workflows into files compatible
 
 Use the provided `.gitignore` and `.forceignore` to have Git ignore the original meta files and have the Salesforce CLI ignore the separated XML files.
 
-The package parsing script can be used to run the scripts only when labels or workflow metadata types are declared in the manifest file.
-
-If you deploy all metadata in all deployments, omit the `--manifest` argument in the combine scripts to compile all labels and workflows for the deployment.
+If you deploy all metadata in deployments, omit the `--manifest` argument in the combine scripts to compile all labels and workflows for the deployment.
 
 ```
     - python3 ./combine_labels.py
@@ -19,11 +17,15 @@ If you deploy all metadata in all deployments, omit the `--manifest` argument in
 
 If you deploy metadata declared in a manifest file, run the `parse_package.py` script to parse the package.xml and run the combine scripts if `CustomLabel` or `Workflow` is in the package. This script will supply the `--manifest` argument and an additional argument containing the labels and workflows listed in the package.xml.
 
-At this time, retrievals with the Salesforce CLI can use the children metadata types like `WorkflowAlert`.
+```
+    - python3 ./parse_package.py --manifest "./manifest/package.xml"
+```
 
-Deployments using children types like `WorkflowAlert` will have the following failure: `An object XXXXXXXX of type WorkflowAlert was named in package.xml, but was not found in zipped directory`.
+At this time, manifest retrievals with the Salesforce CLI can use the children workflow metadata types like `WorkflowAlert`.
 
-The `parse_package.py` script will automatically adjust the package.xml to list the parent workflow if children workflow types are found in the package.
+Manifest Deployments using workflow children types will have the following failure: `An object XXXXXXXX of type WorkflowAlert was named in package.xml, but was not found in zipped directory`.
+
+The `parse_package.py` script will automatically adjust the package.xml to use the parent workflow if children workflow types are found in the package.
 
 ## Change-Log
 
