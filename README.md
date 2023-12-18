@@ -2,7 +2,12 @@
 
 Salesforce tracks all custom labels in 1 file and all workflows for a single object in 1 file.
 
-If you wish to separate labels and workflows into their own files for version control, run the separate scripts.
+If you wish to separate labels and workflows into their own files for version control, run the separate scripts after retrieving all custom labels and workflows from production.
+
+```
+    - python3 ./separate_labels.py
+    - python3 ./separate_workflows.py
+```
 
 Run the combine scripts to re-combine labels and workflows into files compatible for deployments.
 
