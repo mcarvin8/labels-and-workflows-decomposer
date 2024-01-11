@@ -21,10 +21,9 @@ def read_individual_xmls(workflow_directory, manifest, package_workflows):
     """Read each XML file."""
     individual_xmls = {}
 
-    def process_workflow_file(filepath):
+    def process_workflow_file(filepath, parent_workflow_name):
         tree = ET.parse(filepath)
         root = tree.getroot()
-        parent_workflow_name = filepath.split(os.path.sep)[-3]  # Get parent folder name
         individual_xmls.setdefault(parent_workflow_name, []).append(root)
 
     for root, _, files in os.walk(workflow_directory):
@@ -34,7 +33,7 @@ def read_individual_xmls(workflow_directory, manifest, package_workflows):
                 relative_path = os.path.relpath(file_path, workflow_directory)
                 parent_workflow_name = relative_path.split(os.path.sep)[0]
                 if not manifest or (manifest and parent_workflow_name in package_workflows):
-                    process_workflow_file(file_path)
+                    process_workflow_file(file_path, parent_workflow_name)
 
     # Sort by workflow type and then alphabetically
     sorted_individual_xmls = {k: sorted(v, key=lambda x: x.tag) for k, v in sorted(individual_xmls.items())}
