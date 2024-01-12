@@ -1,5 +1,7 @@
 # Salesforce - Combine & Separate Custom Labels & Workflows
 
+**NOTICE**: This repository has been replaced by https://github.com/mcarvin8/sfdx-decomposer. Any updates required will be pushed to the sfdx-decomposer repository instead of this one.
+
 Salesforce tracks all custom labels in 1 file and all workflows for a single object in 1 file.
 
 If you wish to separate labels and workflows into their own files for version control, run the separate scripts after retrieving all custom labels and workflows from production.
